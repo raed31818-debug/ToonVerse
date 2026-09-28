@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ToonVerse - Free Cartoon TV</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; }
+body { background:#08080C; color:#fff; min-height:100vh; overflow-x:hidden; position:relative; }
+
+body::before {
+  content:''; position:fixed; inset:0; z-index:-2;
+  background:linear-gradient(135deg,#08080C 0%,#1a1035 25%,#0d1a2e 50%,#1a1035 75%,#08080C 100%);
+  background-size:400% 400%; animation:bgShift 20s ease infinite;
+}
+@keyframes bgShift { 0%,100%{background-position:0% 50%;} 50%{background-position:100% 50%;} }
+body::after {
+  content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(circle at 15% 30%, rgba(139,92,246,0.12), transparent 40%),
+    radial-gradient(circle at 85% 70%, rgba(255,59,130,0.10), transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(56,189,248,0.08), transparent 50%);
+  animation:glowPulse 8s ease-in-out infinite;
+}
+@keyframes glowPulse { 0%,100%{opacity:0.6;} 50%{opacity:1;} }
+
+.floaters { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+.floater {
+  position:absolute; font-size:28px; opacity:0.15;
+  animation:floatUp linear infinite;
+  filter:drop-shadow(0 0 12px currentColor);
+}
+@keyframes floatUp {
+  0% { transform:translateY(110vh) rotate(0deg); opacity:0; }
+  10% { opacity:0.2; } 90% { opacity:0.2; }
+  100% { transform:translateY(-10vh) rotate(360deg); opacity:0; }
+}
+
+header {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:15px 5%; background:rgba(8,8,12,0.85);
+  position:sticky; top:0; z-index:100; backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,0.06); flex-wrap:wrap; gap:10px;
+}
+.logo { display:flex; align-items:center; gap:10px; font-size:22px; font-weight:800;
+  background:linear-gradient(90deg,#ff3b82,#8b5cf6,#38bdf8);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  animation:logoGlow 3s ease-in-out infinite; }
+@keyframes logoGlow {
+  0%,100%{filter:drop-shadow(0 0 6px rgba(139,92,246,0.5));}
+  50%{filter:drop-shadow(0 0 18px rgba(255,59,130,0.7));}
+}
+.logo-icon { width:32px; height:32px; border-radius:9px;
+  background:linear-gradient(135deg,#ff3b82,#8b5cf6,#38bdf8);
+  display:grid; place-items:center; font-size:14px; -webkit-text-fill-color:initial;
+  animation:iconPulse 2s ease-in-out infinite; }
+@keyframes iconPulse {
+  0%,100%{transform:scale(1);box-shadow:0 0 10px rgba(139,92,246,0.5);}
+  50%{transform:scale(1.08);box-shadow:0 0 25px rgba(255,59,130,0.8);}
+}
+
+.header-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.hdr-btn {
+  padding:9px 16px; border-radius:30px; border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.06); color:#fff; font-size:13px; font-weight:600;
+  cursor:pointer; transition:.25s; font-family:inherit; white-space:nowrap;
+}
+.hdr-btn:hover { background:rgba(255,255,255,0.14); transform:translateY(-1px); }
+.hdr-btn.primary {
+  background:linear-gradient(135deg,#ff3b82,#8b5cf6); border-color:transparent;
+  box-shadow:0 0 20px rgba(139,92,246,0.4);
+}
+
+.filter-bar {
+  display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+  padding:15px 5%; background:rgba(255,255,255,0.02);
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  position:relative; z-index:1;
+}
+.filter-bar select, .filter-bar input {
+  padding:12px 18px; border-radius:30px; border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.06); color:#fff; font-size:14px;
+  outline:none; transition:.3s;
+}
+.filter-bar select:focus, .filter-bar input:focus {
+  border-color:#8b5cf6; box-shadow:0 0 15px rgba(139,92,246,0.3);
+}
+.filter-bar select option { background:#1a1a2e; }
+.filter-bar input { flex:1; min-width:180px; }
+.filter-bar input::placeholder { color:rgba(255,255,255,0.4); }
+
+.hero {
+  margin:25px 5%; padding:50px 45px; border-radius:30px;
+  background:linear-gradient(135deg,#1e1b4b,#111827,#08080C);
+  position:relative; overflow:hidden; z-index:1;
+  border:1px solid rgba(139,92,246,0.15);
+}
+.hero::before {
+  content:''; position:absolute; top:-50%; right:-10%; width:500px; height:500px;
+  background:radial-gradient(circle,rgba(139,92,246,0.3),transparent 70%);
+  border-radius:50%; animation:float 8s infinite;
+}
+@keyframes float { 0%,100%{transform:translate(0,0);} 50%{transform:translate(-30px,30px);} }
+.hero h1 { font-size:42px; font-weight:900; margin-bottom:12px; position:relative;
+  background:linear-gradient(135deg,#fff,#ffd700,#ff3b82);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.hero p { font-size:16px; color:rgba(255,255,255,0.7); max-width:600px; position:relative; }
+
+.channels-section { padding:25px 5% 5px; position:relative; z-index:1; }
+.channels-title {
+  font-size:20px; font-weight:800; margin-bottom:15px;
+  display:flex; align-items:center; justify-content:space-between;
+  flex-wrap:wrap; gap:10px;
+}
+.channels-title .left { display:flex; align-items:center; gap:10px; }
+.channels-title .count { font-size:13px; color:rgba(255,255,255,0.35); font-weight:500; }
+.channels-title .all-btn {
+  font-size:12px; font-weight:600; padding:6px 14px;
+  border-radius:30px; border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.7);
+  cursor:pointer; transition:.25s; font-family:inherit;
+}
+.channels-title .all-btn:hover { background:rgba(255,255,255,0.12); color:#fff; }
+.channels-title .all-btn.active { background:#fff; color:#000; border-color:#fff; box-shadow:0 0 20px rgba(255,255,255,0.3); }
+
+.channels-row {
+  display:flex; gap:12px; overflow-x:auto; padding:5px 0 12px;
+  scrollbar-width:none; -ms-overflow-style:none;
+}
+.channels-row::-webkit-scrollbar { display:none; }
+
+.channel-card {
+  flex-shrink:0; min-width:170px; height:64px;
+  border-radius:16px; border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.05); cursor:pointer;
+  padding:0 16px; display:flex; align-items:center; gap:12px;
+  transition:.25s; color:#fff; font-family:inherit; text-align:left;
+  position:relative;
+}
+.channel-card:hover {
+  background:rgba(255,255,255,0.10);
+  border-color:rgba(255,255,255,0.18);
+  transform:scale(1.03);
+  box-shadow:0 0 20px rgba(139,92,246,0.2);
+}
+.channel-card.active {
+  background:#fff; color:#000; border-color:#fff;
+  box-shadow:0 8px 24px rgba(255,255,255,0.15), 0 0 30px rgba(139,92,246,0.4);
+}
+.channel-logo {
+  width:36px; height:36px; border-radius:10px;
+  display:grid; place-items:center;
+  font-size:14px; font-weight:900; flex-shrink:0;
+}
+.channel-info { line-height:1.2; min-width:0; }
+.channel-name {
+  font-size:13px; font-weight:700;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.channel-count { font-size:11px; opacity:0.55; margin-top:2px; }
+.channel-del {
+  position:absolute; top:4px; right:4px; width:20px; height:20px;
+  border-radius:50%; border:0; background:rgba(255,59,48,0.8); color:#fff;
+  font-size:11px; line-height:1; cursor:pointer; display:none;
+  align-items:center; justify-content:center;
+}
+.channel-card:hover .channel-del { display:flex; }
+
+.section { padding:25px 5%; position:relative; z-index:1; }
+.section-title { font-size:22px; font-weight:800; margin-bottom:18px;
+  display:flex; align-items:center; gap:10px; }
+
+.card-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:18px; }
+.card {
+  background:rgba(255,255,255,0.04); border-radius:18px; overflow:hidden;
+  cursor:pointer; transition:all .35s cubic-bezier(0.175,0.885,0.32,1.275);
+  border:1px solid rgba(255,255,255,0.06); text-decoration:none; color:#fff;
+  display:block; position:relative;
+}
+.card:hover { transform:translateY(-8px) scale(1.02);
+  box-shadow:0 20px 50px rgba(139,92,246,0.25), 0 0 40px rgba(255,59,130,0.15);
+  border-color:rgba(139,92,246,0.5); }
+.card-image {
+  position:relative; height:150px; display:flex; align-items:center; justify-content:center;
+  font-size:60px; overflow:hidden;
+  background:linear-gradient(135deg,#1e1b4b,#111827);
+}
+.card-play {
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,0.5); opacity:0; transition:.3s; font-size:36px;
+}
+.card:hover .card-play { opacity:1; }
+.card-info { padding:14px 16px; }
+.card-info h3 { font-size:14px; font-weight:700; margin-bottom:4px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card-info .ar { font-size:12px; color:rgba(255,255,255,0.5);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:6px; }
+.card-meta { display:flex; justify-content:space-between; font-size:11px;
+  color:rgba(255,255,255,0.5); align-items:center; }
+.rating { color:#ffd700; font-weight:600; }
+.type-badge { padding:2px 8px; border-radius:8px; font-size:10px; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.5px; }
+.type-series { background:rgba(139,92,246,0.2); color:#a78bfa; }
+.type-movie { background:rgba(255,59,130,0.2); color:#ff3b82; }
+.type-classic { background:rgba(107,255,184,0.2); color:#6bffb8; }
+.type-islamic { background:rgba(255,215,0,0.2); color:#ffd700; }
+.type-educational { background:rgba(56,189,248,0.2); color:#38bdf8; }
+.type-english { background:rgba(255,159,10,0.2); color:#ff9f0a; }
+.type-prayer { background:rgba(48,209,88,0.2); color:#30D158; }
+
+.card-del {
+  position:absolute; top:8px; right:8px; width:26px; height:26px;
+  border-radius:50%; border:0; background:rgba(0,0,0,0.65); color:#ff8a8a;
+  font-size:13px; cursor:pointer; display:none; align-items:center; justify-content:center;
+  z-index:5;
+}
+.card:hover .card-del { display:flex; }
+
+footer { text-align:center; padding:40px 5%; margin-top:50px;
+  background:rgba(0,0,0,0.4); border-top:1px solid rgba(255,255,255,0.06);
+  color:rgba(255,255,255,0.4); font-size:13px; position:relative; z-index:1; }
+
+dialog {
+  border:1px solid rgba(255,255,255,0.12); border-radius:20px;
+  background:#151526; color:#fff; width:min(460px, calc(100vw - 24px));
+  padding:22px; box-shadow:0 24px 80px rgba(0,0,0,0.6);
+}
+dialog::backdrop { background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); }
+dialog h3 { margin-bottom:6px; font-size:18px; }
+dialog .note { color:rgba(255,255,255,0.55); font-size:12px; line-height:1.5; margin:6px 0 14px; }
+.field { display:flex; flex-direction:column; gap:6px; margin:10px 0; }
+.field label { font-size:12px; color:rgba(255,255,255,0.7); font-weight:600; }
+.field input, .field select {
+  background:#0e0e18; border:1px solid rgba(255,255,255,0.12);
+  border-radius:12px; padding:11px 12px; color:#fff; font-size:14px;
+  outline:none; font-family:inherit;
+}
+.field input:focus, .field select:focus { border-color:#8b5cf6; }
+.field select option { background:#1a1a2e; }
+.dlg-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
+.dlg-btn {
+  padding:10px 18px; border-radius:12px; border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.06); color:#fff; font-weight:600;
+  cursor:pointer; font-family:inherit; font-size:13px;
+}
+.dlg-btn:hover { background:rgba(255,255,255,0.12); }
+.dlg-btn.primary {
+  background:linear-gradient(135deg,#ff3b82,#8b5cf6); border-color:transparent;
+}
+
+.toast {
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%);
+  background:#1c1c30; border:1px solid rgba(255,255,255,0.15);
+  border-radius:999px; padding:10px 20px; font-size:13px;
+  display:none; z-index:200; box-shadow:0 8px 30px rgba(0,0,0,0.5);
+}
+.toast.show { display:block; animation:toastIn .3s ease; }
+@keyframes toastIn { from{opacity:0;transform:translate(-50%,10px);} to{opacity:1;transform:translate(-50%,0);} }
+
+@media (max-width:768px) {
+  .hero { padding:35px 25px; }
+  .hero h1 { font-size:28px; }
+  .card-grid { grid-template-columns:1fr 1fr; gap:12px; }
+  .card-image { height:120px; font-size:48px; }
+}
+@media (max-width:480px) {
+  .card-grid { grid-template-columns:1fr; }
+  .filter-bar { flex-direction:column; }
+  .filter-bar select, .filter-bar input { width:100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="floaters" id="floaters"></div>
+
+<header>
+  <div class="logo"><span class="logo-icon">▶</span> ToonVerse</div>
+  <div class="header-actions">
+    <button class="hdr-btn primary" id="addChannelBtn">＋ Channel</button>
+    <button class="hdr-btn" id="addShowBtn">＋ Show</button>
+    <button class="hdr-btn" id="resetBtn" title="Clear your custom additions">↺ Reset</button>
+  </div>
+</header>
+
+<div class="filter-bar">
+  <select id="typeFilter">
+    <option value="all">All Types</option>
+    <option value="series">Series</option>
+    <option value="movie">Movies</option>
+    <option value="classic">Classic</option>
+    <option value="educational">Educational</option>
+    <option value="english">English Learning</option>
+    <option value="prayer">Quran & Prayer</option>
+    <option value="islamic">Islamic Stories</option>
+    <option value="gulf">Gulf Animation</option>
+  </select>
+  <input type="text" id="nameSearch" placeholder="Search by name (English or Arabic)...">
+</div>
+
+<section class="hero">
+  <h1>One Channel. Endless Cartoons.</h1>
+  <p>YouTube channels, Arabic classics, educational shows, English learning, Quran & prayer, and Gulf animation — all in one place.</p>
+</section>
+
+<section class="channels-section">
+  <div class="channels-title">
+    <div class="left">📡 Channels <span class="count" id="channelCount"></span></div>
+    <button class="all-btn active" id="allChannelsBtn">All</button>
+  </div>
+  <div class="channels-row" id="channelsRow"></div>
+</section>
+
+<section class="section" id="youtubeSection">
+  <h2 class="section-title">📺 Official & Popular Cartoons</h2>
+  <div class="card-grid" id="youtubeGrid"></div>
+</section>
+
+<section class="section" id="englishSection">
+  <h2 class="section-title">🇬🇧 English Learning for Kids — تعلم الإنجليزية</h2>
+  <div class="card-grid" id="englishGrid"></div>
+</section>
+
+<section class="section" id="prayerSection">
+  <h2 class="section-title">🕌 Quran & Prayer for Kids — القرآن والصلاة</h2>
+  <div class="card-grid" id="prayerGrid"></div>
+</section>
+
+<section class="section" id="educationalSection">
+  <h2 class="section-title">🎓 Educational — تعليمي</h2>
+  <div class="card-grid" id="educationalGrid"></div>
+</section>
+
+<section class="section" id="arabicSection">
+  <h2 class="section-title">🌙 Arabic Classics — كلاسيكيات الزمن الجميل</h2>
+  <div class="card-grid" id="arabicGrid"></div>
+</section>
+
+<section class="section" id="gulfSection">
+  <h2 class="section-title">🏺 Gulf Animation — كرتون خليجي</h2>
+  <div class="card-grid" id="gulfGrid"></div>
+</section>
+
+<section class="section" id="islamicSection">
+  <h2 class="section-title">🕌 Islamic Stories — قصص إسلامية للأطفال</h2>
+  <div class="card-grid" id="islamicGrid"></div>
+</section>
+
+<footer>
+  <p>© 2024 ToonVerse — Curated free cartoon sources for the MENA region</p>
+</footer>
+
+<dialog id="addChannelDialog">
+  <form id="addChannelForm" method="dialog">
+    <h3>＋ Add a Channel</h3>
+    <p class="note">Create your own channel card. Then add shows to it with the ＋ Show button.</p>
+    <div class="field"><label>Channel name (English)</label><input id="acName" required placeholder="e.g. My Kids TV"></div>
+    <div class="field"><label>الاسم بالعربية (optional)</label><input id="acNameAr" placeholder="مثال: قناتي"></div>
+    <div class="field"><label>Icon (emoji)</label><input id="acEmoji" value="📺" maxlength="4"></div>
+    <div class="field"><label>Color</label>
+      <select id="acColor">
+        <option value="#8b5cf6">Purple</option>
+        <option value="#ff3b82">Pink</option>
+        <option value="#38bdf8">Blue</option>
+        <option value="#30D158">Green</option>
+        <option value="#FFD60A">Yellow</option>
+        <option value="#FF9F0A">Orange</option>
+        <option value="#AF52DE">Violet</option>
+        <option value="#FF3B30">Red</option>
+      </select>
+    </div>
+    <div class="dlg-actions">
+      <button type="button" class="dlg-btn" id="acCancel">Cancel</button>
+      <button type="submit" class="dlg-btn primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="addShowDialog">
+  <form id="addShowForm" method="dialog">
+    <h3>＋ Add a Show</h3>
+    <p class="note">Paste any YouTube link (video, playlist, or channel) or a search phrase. It opens in a new tab when clicked.</p>
+    <div class="field"><label>Show title (English)</label><input id="asTitle" required placeholder="e.g. Shaun the Sheep"></div>
+    <div class="field"><label>العنوان بالعربية (optional)</label><input id="asTitleAr" placeholder="مثال: شون ذا شيب"></div>
+    <div class="field"><label>Icon (emoji)</label><input id="asEmoji" value="🎬" maxlength="4"></div>
+    <div class="field"><label>Type</label>
+      <select id="asType">
+        <option value="series">Series</option>
+        <option value="movie">Movie</option>
+        <option value="classic">Classic</option>
+        <option value="educational">Educational</option>
+        <option value="english">English Learning</option>
+        <option value="prayer">Quran & Prayer</option>
+        <option value="islamic">Islamic</option>
+        <option value="gulf">Gulf Animation</option>
+      </select>
+    </div>
+    <div class="field"><label>Channel</label><select id="asChannel"></select></div>
+    <div class="field"><label>YouTube link or search phrase</label><input id="asUrl" required placeholder="https://youtube.com/... OR shaun the sheep full episodes"></div>
+    <div class="dlg-actions">
+      <button type="button" class="dlg-btn" id="asCancel">Cancel</button>
+      <button type="submit" class="dlg-btn primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// FLOATING GLOWING OBJECTS
+// ============================================================
+(function createFloaters() {
+  const emojis = ['🎬','🎨','⭐','✨','🎭','📺','🎪','🌟','💫','🎯','🦄','🐻','🐰','🦊','🐼','🌙','🕌','📖','🇬🇧','📚'];
+  const colors = ['#ff3b82','#8b5cf6','#38bdf8','#ffd700','#6bffb8','#ff9f0a'];
+  const container = document.getElementById('floaters');
+  for (let i = 0; i < 18; i++) {
+    const el = document.createElement('div');
+    el.className = 'floater';
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.left = Math.random() * 100 + '%';
+    el.style.color = colors[Math.floor(Math.random() * colors.length)];
+    el.style.animationDuration = (15 + Math.random() * 20) + 's';
+    el.style.animationDelay = (Math.random() * 20) + 's';
+    el.style.fontSize = (18 + Math.random() * 24) + 'px';
+    container.appendChild(el);
+  }
+})();
+
+const LS_KEY = "toonverse-data-v4";
+function loadCustom() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+    return { channels: Array.isArray(raw.channels) ? raw.channels : [],
+             shows: Array.isArray(raw.shows) ? raw.shows : [] };
+  } catch(e) { return { channels: [], shows: [] }; }
+}
+function saveCustom(custom) { localStorage.setItem(LS_KEY, JSON.stringify(custom)); }
+let custom = loadCustom();
+
+function ytSearch(q) {
+  return "https://www.youtube.com/results?search_query=" + encodeURIComponent(q);
+}
+
+// ============================================================
+// BUILT-IN CHANNELS
+// ============================================================
+const builtInChannels = [
+  { id:"spacetoon", name:"Spacetoon", nameAr:"سبيستون", color:"#FFD60A", emoji:"🌙" },
+  { id:"mbc3", name:"MBC3", nameAr:"إم بي سي 3", color:"#FF3B30", emoji:"📺" },
+  { id:"cn", name:"Cartoon Network", nameAr:"كرتون نتورك", color:"#3b82f6", emoji:"🐱" },
+  { id:"baraem", name:"Baraem", nameAr:"براعم", color:"#AF52DE", emoji:"🧸" },
+  { id:"jeem", name:"Jeem TV", nameAr:"جيم", color:"#30D158", emoji:"🎓" },
+  { id:"disney", name:"Disney", nameAr:"ديزني", color:"#0A84FF", emoji:"🏰" },
+  { id:"ghibli", name:"Ghibli", nameAr:"جيبلي", color:"#5AC8FA", emoji:"🌿" },
+  { id:"islamic", name:"Islamic Stories", nameAr:"قصص إسلامية", color:"#ffd700", emoji:"🕌" },
+  { id:"islamic-en", name:"Islamic English", nameAr:"إسلامي إنجليزي", color:"#30D158", emoji:"🕋" },
+  { id:"english", name:"English Learning", nameAr:"تعلم الإنجليزية", color:"#ff9f0a", emoji:"🇬🇧" },
+  { id:"prayer", name:"Quran & Prayer", nameAr:"القرآن والصلاة", color:"#30D158", emoji:"📖" },
+  { id:"bbc", name:"BBC Kids", nameAr:"بي بي سي للأطفال", color:"#FF3B30", emoji:"🐑" },
+  { id:"educational", name:"Kids Educational", nameAr:"تعليمي للأطفال", color:"#38bdf8", emoji:"🔢" },
+  { id:"gulf", name:"Gulf Animation", nameAr:"كرتون خليجي", color:"#6bffb8", emoji:"🏺" },
+  { id:"qatartv", name:"Qatar TV Classics", nameAr:"تلفزيون قطر", color:"#ff9f0a", emoji:"📡" }
+];
+
+// ============================================================
+// BUILT-IN SHOWS
+// ============================================================
+const builtInYouTube = [
+  { title:"Peppa Pig Official", titleAr:"بيبا بيج", type:"series", emoji:"🐷", channel:"mbc3",
+    url:"https://www.youtube.com/playlist?list=PLFEgnf4tmQe9AM90IClvfITXzpsKNgKJ_" },
+  { title:"Tom & Jerry (Cartoon Network)", titleAr:"توم وجيري", type:"series", emoji:"🐱", channel:"cn",
+    url:"https://www.youtube.com/playlist?list=PLBMgmF_DRtDy5iAmY4pIT4TTQkufJBNkn" },
+  { title:"Tom & Jerry: Prank War", titleAr:"توم وجيري: حرب المقالب", type:"series", emoji:"😂", channel:"cn",
+    url:"https://www.youtube.com/watch?v=ajNPOEADJ24" },
+  { title:"Peppa Pig Tales", titleAr:"حكايات بيبا بيج", type:"series", emoji:"🐽", channel:"mbc3",
+    url:"https://www.youtube.com/playlist?list=PLFEgnf4tmQe_IgeJyHfPrcAObGV8l7SsC" },
+  { title:"Shaun the Sheep", titleAr:"شون ذا شيب", type:"series", emoji:"🐑", channel:"bbc",
+    url:"https://www.youtube.com/playlist?list=PLRf1lYFUJlKMC5Nj5fFmwm8Jf8Dw7iZ7U" },
+  { title:"Shaun the Sheep — Full Episodes", titleAr:"شون ذا شيب - حلقات كاملة", type:"series", emoji:"🐏", channel:"bbc",
+    url: ytSearch("Shaun the Sheep full episodes English") },
+  { title:"Ben & Holly's Little Kingdom", titleAr:"بن وهولي", type:"series", emoji:"🧚", channel:"bbc",
+    url: ytSearch("Ben and Holly's Little Kingdom full episodes") },
+  { title:"Bluey", titleAr:"بلوي", type:"series", emoji:"🐕", channel:"disney",
+    url: ytSearch("Bluey full episodes English") },
+  { title:"Paw Patrol", titleAr:"باو باترول", type:"series", emoji:"🐾", channel:"mbc3",
+    url: ytSearch("Paw Patrol full episodes English") },
+  { title:"Octonauts", titleAr:"الأخطبوطات", type:"series", emoji:"🐙", channel:"bbc",
+    url: ytSearch("Octonauts full episodes English") },
+  { title:"Postman Pat", titleAr:"ساعي البريد بات", type:"classic", emoji:"📮", channel:"bbc",
+    url: ytSearch("Postman Pat full episodes English") },
+  { title:"Fireman Sam", titleAr:"رجل الإطفاء سام", type:"classic", emoji:"🚒", channel:"bbc",
+    url: ytSearch("Fireman Sam full episodes English") },
+  { title:"Bob the Builder", titleAr:"بوب البنّاء", type:"classic", emoji:"🔨", channel:"bbc",
+    url: ytSearch("Bob the Builder full episodes English") },
+  { title:"Thomas & Friends", titleAr:"توماس والأصدقاء", type:"classic", emoji:"🚂", channel:"bbc",
+    url: ytSearch("Thomas and Friends full episodes English") },
+  { title:"Caillou", titleAr:"كايو", type:"series", emoji:"👦", channel:"mbc3",
+    url: ytSearch("Caillou full episodes English") },
+  { title:"Bing", titleAr:"بينغ", type:"series", emoji:"🐰", channel:"bbc",
+    url: ytSearch("Bing full episodes English") },
+  { title:"Pat & Mat (A je to!)", titleAr:"بات ومات", type:"classic", emoji:"🔧", channel:"bbc",
+    url: ytSearch("Pat and Mat full episodes English") },
+  { title:"Mr Bean Animated", titleAr:"مستر بين الكرتون", type:"series", emoji:"🎩", channel:"bbc",
+    url:"https://www.youtube.com/playlist?list=PLWbwEfdfztESbdiBxcX9dF00Kri3PzPQy" },
+  { title:"Mr Bean Animated — Full Episodes", titleAr:"مستر بين - حلقات كاملة", type:"series", emoji:"🧸", channel:"bbc",
+    url: ytSearch("Mr Bean Animated full episodes English") },
+  { title:"Yogi Bear", titleAr:"الدب يوجي", type:"classic", emoji:"🐻", channel:"cn",
+    url: ytSearch("Yogi Bear full episodes English") },
+  { title:"Yogi Bear — Arabic", titleAr:"الدب يوجي بالعربية", type:"classic", emoji:"🍯", channel:"spacetoon",
+    url: ytSearch("الدب يوجي كرتون عربي") },
+  { title:"Woody Woodpecker", titleAr:"وودي نقار الخشب", type:"classic", emoji:"🐦", channel:"cn",
+    url:"https://www.youtube.com/playlist?list=PL0liVgDTrcuQ6Qs__WI8Om1TVdft0_wEu" },
+  { title:"Woody Woodpecker — Full Marathon", titleAr:"وودي - ماراثون كامل", type:"classic", emoji:"🌳", channel:"cn",
+    url: ytSearch("Woody Woodpecker full episodes English") },
+  { title:"SpongeBob SquarePants", titleAr:"سبونج بوب", type:"series", emoji:"🧽", channel:"mbc3",
+    url: ytSearch("SpongeBob SquarePants full episodes English") },
+  { title:"SpongeBob — Arabic", titleAr:"سبونج بوب مدبلج", type:"series", emoji:"🌊", channel:"mbc3",
+    url: ytSearch("سبونج بوب مدبلج عربي") },
+  { title:"Zeina & Nahool", titleAr:"زينة ونحول", type:"series", emoji:"🐝", channel:"baraem",
+    url: ytSearch("زينة ونحول كرتون حلقات") },
+  { title:"Zeina & Nahool (English)", titleAr:"زينة ونحول بالإنجليزية", type:"series", emoji:"🌸", channel:"bbc",
+    url: ytSearch("Maya the Bee full episodes English") },
+  { title:"The Adventures of Tom Sawyer (English)", titleAr:"مغامرات توم سوير بالإنجليزية", type:"classic", emoji:"🧢", channel:"spacetoon",
+    url: ytSearch("The Adventures of Tom Sawyer 1980 full episodes English") },
+  { title:"Tom Sawyer — Arabic", titleAr:"توم سوير بالعربية", type:"classic", emoji:"⛵", channel:"spacetoon",
+    url: ytSearch("توم سوير كرتون حلقات كاملة") }
+];
+
+// ============================================================
+// ENGLISH LEARNING SECTION (NEW)
+// ============================================================
+const builtInEnglish = [
+  { title:"Steve and Maggie", titleAr:"ستيف وماغي", type:"english", emoji:"🐦", channel:"english",
+    url:"https://www.youtube.com/playlist?list=PLRHRv4U7UiFOuyvSQup56sCSgr-eLFE7y" },
+  { title:"Steve and Maggie — Full Episodes", titleAr:"ستيف وماغي - حلقات كاملة", type:"english", emoji:"🎩", channel:"english",
+    url: ytSearch("Steve and Maggie Wow English TV full episodes") },
+  { title:"Learn & Play with Steve and Maggie", titleAr:"تعلم والعب مع ستيف وماغي", type:"english", emoji:"🎮", channel:"english",
+    url: ytSearch("Learn and Play with Steve and Maggie full episodes") },
+  { title:"Animal Songs with Steve & Maggie", titleAr:"أغاني الحيوانات", type:"english", emoji:"🦁", channel:"english",
+    url: ytSearch("Animal Songs with Steve and Maggie full episodes") },
+  { title:"Blippi", titleAr:"بليبي", type:"english", emoji:"🕶️", channel:"english",
+    url: ytSearch("Blippi full episodes English") },
+  { title:"Blippi — Learning Songs", titleAr:"بليبي - أغاني تعليمية", type:"english", emoji:"🎵", channel:"english",
+    url: ytSearch("Blippi learning songs full episodes") },
+  { title:"Blippi — Colors & Shapes", titleAr:"بليبي - الألوان والأشكال", type:"english", emoji:"🎨", channel:"english",
+    url: ytSearch("Blippi learn colors and shapes full episodes") },
+  { title:"Blippi — ABC & 123", titleAr:"بليبي - الحروف والأرقام", type:"english", emoji:"🔤", channel:"english",
+    url: ytSearch("Blippi learn ABC 123 full episodes") },
+  { title:"Wow! English TV", titleAr:"واو! إنجليزي", type:"english", emoji:"📺", channel:"english",
+    url: ytSearch("Wow English TV full episodes") },
+  { title:"English Stories for Kids", titleAr:"قصص إنجليزية للأطفال", type:"english", emoji:"📚", channel:"english",
+    url: ytSearch("English stories for kids full episodes") }
+];
+
+// ============================================================
+// QURAN & PRAYER SECTION (NEW)
+// ============================================================
+const builtInPrayer = [
+  { title:"Learn Quran for Children", titleAr:"تعلم القرآن للأطفال", type:"prayer", emoji:"📖", channel:"prayer",
+    url: ytSearch("Learn Quran for children full playlist") },
+  { title:"Ali and Sumaya: Let's Pray!", titleAr:"علي وسمية: هيا نصلي", type:"prayer", emoji:"🤲", channel:"prayer",
+    url: ytSearch("Ali and Sumaya Let's Pray full episodes") },
+  { title:"Miraj Stories: Quran for Kids", titleAr:"ميراج: القرآن للأطفال", type:"prayer", emoji:"🌟", channel:"prayer",
+    url: ytSearch("Miraj Stories Quran for kids full episodes") },
+  { title:"SalatSteps: Prayer Guide", titleAr:"خطوات الصلاة", type:"prayer", emoji:"🕋", channel:"prayer",
+    url: ytSearch("SalatSteps prayer guide for kids") },
+  { title:"تعليم الصلاة والوضوء", titleAr:"Teaching Prayer & Wudu", type:"prayer", emoji:"🧎", channel:"prayer",
+    url: ytSearch("تعليم الصلاة والوضوء للأطفال") },
+  { title:"تعليم الوضوء للأطفال", titleAr:"Teaching Wudu for Kids", type:"prayer", emoji:"💧", channel:"prayer",
+    url: ytSearch("تعليم الوضوء للأطفال خطوة بخطوة") },
+  { title:"Muslim Reminder Kids — Duas", titleAr:"أدعية المسلم الصغير", type:"prayer", emoji:"🎵", channel:"prayer",
+    url: ytSearch("Muslim Reminder Kids duas full episodes") },
+  { title:"قصة آية — Quran Stories", titleAr:"قصة آية", type:"prayer", emoji:"📗", channel:"prayer",
+    url: ytSearch("قصة آية للأطفال حلقات كاملة") },
+  { title:"The 5 Pillars of Islam", titleAr:"أركان الإسلام الخمسة", type:"prayer", emoji:"☪️", channel:"prayer",
+    url: ytSearch("5 Pillars of Islam for kids") },
+  { title:"Wudu Song for Kids", titleAr:"أغنية الوضوء", type:"prayer", emoji:"💦", channel:"prayer",
+    url: ytSearch("Wudu song for kids English") },
+  { title:"Salah Song for Kids", titleAr:"أغنية الصلاة", type:"prayer", emoji:"🕌", channel:"prayer",
+    url: ytSearch("Salah song for kids English") },
+  { title:"Dua Before Eating", titleAr:"دعاء قبل الطعام", type:"prayer", emoji:"🍽️", channel:"prayer",
+    url: ytSearch("Dua before eating for kids") },
+  { title:"Dua After Waking Up", titleAr:"دعاء الاستيقاظ", type:"prayer", emoji:"☀️", channel:"prayer",
+    url: ytSearch("Dua after waking up for kids") }
+];
+
+const builtInEducational = [
+  { title:"Numberblocks", titleAr:"بلوكات الأرقام", type:"educational", emoji:"🔢", channel:"educational",
+    url: ytSearch("Numberblocks full episodes") },
+  { title:"Alphablocks", titleAr:"بلوكات الحروف", type:"educational", emoji:"🔤", channel:"educational",
+    url: ytSearch("Alphablocks full episodes") },
+  { title:"Colourblocks", titleAr:"بلوكات الألوان", type:"educational", emoji:"🎨", channel:"educational",
+    url: ytSearch("Colourblocks full episodes") },
+  { title:"Sesame Street", titleAr:"شارع سمسم", type:"educational", emoji:"🧸", channel:"baraem",
+    url: ytSearch("Sesame Street full episodes English") },
+  { title:"Alam Simsim (Arabic Sesame)", titleAr:"عالم سمسم", type:"educational", emoji:"🌍", channel:"baraem",
+    url: ytSearch("عالم سمسم حلقات كاملة") },
+  { title:"Iftah Ya Simsim", titleAr:"افتح يا سمسم", type:"educational", emoji:"🚪", channel:"baraem",
+    url: ytSearch("افتح يا سمسم حلقات كاملة") },
+  { title:"Once Upon a Time... Life", titleAr:"كان يا ما كان الحياة", type:"educational", emoji:"🫀", channel:"spacetoon",
+    url: ytSearch("كان يا ما كان الحياة حلقات كاملة") },
+  { title:"Once Upon a Time... Life (English)", titleAr:"كان يا ما كان الحياة بالإنجليزية", type:"educational", emoji:"🧬", channel:"educational",
+    url: ytSearch("Once Upon a Time Life full episodes English") },
+  { title:"SciShow Kids", titleAr:"عرض العلوم للأطفال", type:"educational", emoji:"🔬", channel:"educational",
+    url: ytSearch("SciShow Kids full episodes") },
+  { title:"StoryBots", titleAr:"روبو القصص", type:"educational", emoji:"🤖", channel:"educational",
+    url: ytSearch("StoryBots full episodes") },
+  { title:"Little Baby Bum", titleAr:"بيبي بام الصغير", type:"educational", emoji:"🎵", channel:"educational",
+    url: ytSearch("Little Baby Bum nursery rhymes") },
+  { title:"Cocomelon", titleAr:"كوكوميلون", type:"educational", emoji:"🍉", channel:"educational",
+    url: ytSearch("Cocomelon nursery rhymes full") },
+  { title:"Super Simple Songs", titleAr:"أغاني بسيطة للأطفال", type:"educational", emoji:"🎶", channel:"educational",
+    url: ytSearch("Super Simple Songs full episodes") },
+  { title:"Ada Twist, Scientist", titleAr:"أدا العالِمة", type:"educational", emoji:"🧪", channel:"educational",
+    url: ytSearch("Ada Twist Scientist full episodes") },
+  { title:"Magic School Bus", titleAr:"حافلة المدرسة السحرية", type:"educational", emoji:"🚌", channel:"educational",
+    url: ytSearch("Magic School Bus full episodes English") },
+  { title:"Wild Kratts", titleAr:"الأخوان كراتس", type:"educational", emoji:"🦁", channel:"educational",
+    url: ytSearch("Wild Kratts full episodes English") },
+  { title:"Dr. Binocs Show", titleAr:"دكتور بينوكس", type:"educational", emoji:"👨‍🔬", channel:"educational",
+    url: ytSearch("Dr Binocs Show full episodes") }
+];
+
+const builtInArabicClassics = [
+  { title:"Grendizer", titleAr:"جرندايزر", year:1975, rating:"9.5", type:"classic", emoji:"🤖", channel:"spacetoon", url: ytSearch("جرندايزر حلقات كاملة") },
+  { title:"Flone", titleAr:"فلونة", year:1981, rating:"9.2", type:"classic", emoji:"🏝️", channel:"spacetoon", url: ytSearch("فلونة كرتون حلقات") },
+  { title:"Sasuke", titleAr:"ساسوكي", year:1968, rating:"9.0", type:"classic", emoji:"🥷", channel:"spacetoon", url: ytSearch("ساسوكي كرتون حلقات") },
+  { title:"Sinan", titleAr:"سنان", year:1975, rating:"9.1", type:"classic", emoji:"🌳", channel:"spacetoon", url: ytSearch("سنان كرتون حلقات") },
+  { title:"Abtal Al Malaeb", titleAr:"أبطال الملاعب", year:1983, rating:"9.4", type:"classic", emoji:"⚽", channel:"spacetoon", url: ytSearch("أبطال الملاعب كابتن ماجد") },
+  { title:"World Tales", titleAr:"قصص عالمية", year:1976, rating:"9.3", type:"classic", emoji:"📖", channel:"baraem", url: ytSearch("قصص عالمية حكايات") },
+  { title:"Captain Tsubasa", titleAr:"كابتن ماجد", year:1983, rating:"8.6", type:"series", emoji:"🏆", channel:"spacetoon", url: ytSearch("كابتن ماجد حلقات كاملة") },
+  { title:"Detective Conan", titleAr:"المحقق كونان", year:1996, rating:"9.1", type:"series", emoji:"🕵️", channel:"spacetoon", url: ytSearch("المحقق كونان مدبلج عربي") },
+  { title:"Slam Dunk", titleAr:"سلام دانك", year:1993, rating:"8.8", type:"series", emoji:"🏀", channel:"spacetoon", url: ytSearch("سلام دانك مدبلج عربي") },
+  { title:"Dragon Ball Z", titleAr:"دراغون بول زد", year:1989, rating:"9.0", type:"series", emoji:"🐉", channel:"spacetoon", url: ytSearch("دراغون بول زد مدبلج عربي") },
+  { title:"Naruto", titleAr:"ناروتو", year:2002, rating:"8.9", type:"series", emoji:"🍥", channel:"spacetoon", url: ytSearch("ناروتو مدبلج عربي") },
+  { title:"Coco", titleAr:"كوكو", year:2017, rating:"9.0", type:"movie", emoji:"💀", channel:"disney", url: ytSearch("Coco movie arabic") },
+  { title:"Encanto", titleAr:"إنكانتو", year:2021, rating:"8.2", type:"movie", emoji:"🌸", channel:"disney", url: ytSearch("Encanto movie arabic") },
+  { title:"Spirited Away", titleAr:"المخطوفة", year:2001, rating:"9.3", type:"movie", emoji:"🐉", channel:"ghibli", url: ytSearch("Spirited Away arabic") },
+  { title:"My Neighbor Totoro", titleAr:"جاري توتورو", year:1988, rating:"8.8", type:"movie", emoji:"🌳", channel:"ghibli", url: ytSearch("My Neighbor Totoro arabic") }
+];
+
+const builtInQatarTV = [
+  { title:"Adventures of the Little Koala", titleAr:"مغامرات الكوالا الصغير", type:"classic", emoji:"🐨", channel:"qatartv", url: ytSearch("Adventures of the Little Koala full episodes") },
+  { title:"Calimero", titleAr:"كاليميرو", type:"classic", emoji:"🐣", channel:"qatartv", url: ytSearch("Calimero full episodes English") },
+  { title:"Captain Tsubasa J", titleAr:"كابتن ماجد", type:"classic", emoji:"⚽", channel:"qatartv", url: ytSearch("Captain Tsubasa J full episodes") },
+  { title:"Hamtaro", titleAr:"هام تارو", type:"classic", emoji:"🐹", channel:"qatartv", url: ytSearch("Hamtaro full episodes English") },
+  { title:"Hello! Spank", titleAr:"مرحبا سبانك", type:"classic", emoji:"🐶", channel:"qatartv", url: ytSearch("Hello Spank full episodes") },
+  { title:"Nobody's Boy Remi", titleAr:"ريمي الفتى الشريد", type:"classic", emoji:"🎻", channel:"qatartv", url: ytSearch("Nobody's Boy Remi full episodes") },
+  { title:"Sindbad the Sailor", titleAr:"مغامرات سندباد", type:"classic", emoji:"⛵", channel:"qatartv", url: ytSearch("Sindbad the Sailor anime full episodes") },
+  { title:"The Wonderful Adventures of Nils", titleAr:"مغامرات نيلز", type:"classic", emoji:"🦢", channel:"qatartv", url: ytSearch("Wonderful Adventures of Nils full episodes") },
+  { title:"Sherlock Hound", titleAr:"شرلوك هوند", type:"classic", emoji:"🔍", channel:"qatartv", url: ytSearch("Sherlock Hound full episodes") },
+  { title:"Alice in Wonderland", titleAr:"أليس في بلاد العجائب", type:"classic", emoji:"🐇", channel:"qatartv", url: ytSearch("Alice in Wonderland anime full episodes") },
+  { title:"Barbapapa", titleAr:"عائلة باربا بابا", type:"classic", emoji:"🎨", channel:"qatartv", url: ytSearch("Barbapapa full episodes English") },
+  { title:"Little Lulu", titleAr:"لولو الصغيرة", type:"classic", emoji:"👧", channel:"qatartv", url: ytSearch("Little Lulu full episodes") },
+  { title:"A Little Princess Sara", titleAr:"سالي", type:"classic", emoji:"👑", channel:"qatartv", url: ytSearch("A Little Princess Sara full episodes") },
+  { title:"Marco", titleAr:"ماركو", type:"classic", emoji:"🌍", channel:"qatartv", url: ytSearch("Marco From the Apennines to the Andes full episodes") },
+  { title:"Huckleberry Finn", titleAr:"هكلبيري", type:"classic", emoji:"🛶", channel:"qatartv", url: ytSearch("Huckleberry Finn anime full episodes") },
+  { title:"Inspector Gadget", titleAr:"المفتش غادجيت", type:"classic", emoji:"🕵️", channel:"qatartv", url: ytSearch("Inspector Gadget full episodes") },
+  { title:"Kimba the White Lion", titleAr:"الليث الأبيض", type:"classic", emoji:"🦁", channel:"qatartv", url: ytSearch("Kimba the White Lion full episodes") },
+  { title:"Kickers", titleAr:"أبطال الكرة", type:"classic", emoji:"🏆", channel:"qatartv", url: ytSearch("Kickers anime full episodes") },
+  { title:"Maya the Bee", titleAr:"النحلة مايا", type:"classic", emoji:"🐝", channel:"qatartv", url: ytSearch("Maya the Bee full episodes English") }
+];
+
+const builtInGulf = [
+  { title:"Block 13", titleAr:"قطعة 13", type:"gulf", emoji:"🏘️", channel:"gulf", url: ytSearch("Block 13 قطعة 13 كرتون حلقات") },
+  { title:"Freej", titleAr:"فريج", type:"gulf", emoji:"🏺", channel:"gulf", url: ytSearch("فريج كرتون إماراتي حلقات") },
+  { title:"Bakar", titleAr:"بكار", type:"gulf", emoji:"🐐", channel:"gulf", url: ytSearch("بكار كرتون حلقات كاملة") },
+  { title:"Kawkabani", titleAr:"كوكباني", type:"gulf", emoji:"👽", channel:"gulf", url: ytSearch("كوكباني كرتون قطري حلقات") }
+];
+
+const builtInIslamic = [
+  { title:"Stories of the Prophets (Claymation)", titleAr:"قصص الأنبياء بالصلصال", type:"islamic", emoji:"📖", channel:"islamic", url: ytSearch("قصص الأنبياء بالصلصال حلقات كاملة") },
+  { title:"This Is What the Companions Were Like", titleAr:"هكذا كان الصحابة", type:"islamic", emoji:"🤝", channel:"islamic", url: ytSearch("هكذا كان الصحابة كرتون حلقات") },
+  { title:"The 99", titleAr:"الأبطال 99", type:"islamic", emoji:"🦸", channel:"islamic-en", url: ytSearch("THE 99 cartoon English full episodes") },
+  { title:"He Is the Messenger of God", titleAr:"إنه رسول الله", type:"islamic", emoji:"🌙", channel:"islamic", url: ytSearch("إنه رسول الله كرتون حلقات") },
+  { title:"We Revive Them to Live", titleAr:"نحييها لنحيا", type:"islamic", emoji:"📜", channel:"islamic", url: ytSearch("نحييها لنحيا مسلسل كرتون") },
+  { title:"So Was the Quran", titleAr:"هكذا كان القرآن", type:"islamic", emoji:"📗", channel:"islamic", url: ytSearch("هكذا كان القرآن كرتون") },
+  { title:"Nussa", titleAr:"نصّا", type:"islamic", emoji:"👦", channel:"islamic-en", url: ytSearch("Nussa cartoon full episodes") },
+  { title:"Omar and Hana", titleAr:"عمر وهنا", type:"islamic", emoji:"🎵", channel:"islamic-en", url: ytSearch("Omar and Hana full episodes") },
+  { title:"Ali and Sumaya", titleAr:"علي وسمية", type:"islamic", emoji:"🕌", channel:"islamic-en", url: ytSearch("Ali and Sumaya full episodes") },
+  { title:"Syamil & Dodo", titleAr:"شامل ودودو", type:"islamic", emoji:"🧒", channel:"islamic-en", url: ytSearch("Syamil dan Dodo full episodes") },
+  { title:"Miraj Stories", titleAr:"ميراج", type:"islamic", emoji:"🌟", channel:"islamic-en", url: ytSearch("Miraj Stories Islamic cartoons") },
+  { title:"Zaky & Friends", titleAr:"زكي وأصدقاؤه", type:"islamic", emoji:"🐨", channel:"islamic-en", url: ytSearch("Zaky and Friends Islamic cartoons") },
+  { title:"Prophet Adam", titleAr:"قصة سيدنا آدم", type:"islamic", emoji:"🌍", channel:"islamic", url: ytSearch("قصة سيدنا آدم للأطفال") },
+  { title:"Prophet Nuh (Noah)", titleAr:"قصة سيدنا نوح", type:"islamic", emoji:"🚢", channel:"islamic", url: ytSearch("قصة سيدنا نوح للأطفال") },
+  { title:"Prophet Ibrahim", titleAr:"قصة سيدنا إبراهيم", type:"islamic", emoji:"🕋", channel:"islamic", url: ytSearch("قصة سيدنا إبراهيم للأطفال") },
+  { title:"Prophet Yusuf", titleAr:"قصة سيدنا يوسف", type:"islamic", emoji:"👑", channel:"islamic", url: ytSearch("قصة سيدنا يوسف كاملة") },
+  { title:"Prophet Musa", titleAr:"قصة سيدنا موسى", type:"islamic", emoji:"🌊", channel:"islamic", url: ytSearch("قصة سيدنا موسى للأطفال") },
+  { title:"Prophet Isa", titleAr:"قصة سيدنا عيسى", type:"islamic", emoji:"✨", channel:"islamic", url: ytSearch("قصة سيدنا عيسى للأطفال") },
+  { title:"Prophet Muhammad ﷺ", titleAr:"قصة سيدنا محمد ﷺ", type:"islamic", emoji:"🌙", channel:"islamic", url: ytSearch("قصة سيدنا محمد للأطفال") },
+  { title:"Prophet Yunus", titleAr:"قصة سيدنا يونس", type:"islamic", emoji:"🐋", channel:"islamic", url: ytSearch("قصة سيدنا يونس والحوت") },
+  { title:"Prophet Sulaiman", titleAr:"قصة سيدنا سليمان", type:"islamic", emoji:"🐜", channel:"islamic", url: ytSearch("قصة سيدنا سليمان للأطفال") },
+  { title:"Companions of the Prophet", titleAr:"قصص الصحابة", type:"islamic", emoji:"⭐", channel:"islamic", url: ytSearch("قصص الصحابة للأطفال") },
+  { title:"Islamic Manners for Kids", titleAr:"آداب إسلامية للأطفال", type:"islamic", emoji:"🕌", channel:"islamic", url: ytSearch("آداب إسلامية للأطفال") },
+  { title:"Pillars of Islam", titleAr:"أركان الإسلام", type:"islamic", emoji:"☪️", channel:"islamic", url: ytSearch("أركان الإسلام للأطفال") },
+  { title:"Ramadan Stories", titleAr:"قصص رمضان", type:"islamic", emoji:"🌙", channel:"islamic", url: ytSearch("قصص رمضان للأطفال") },
+  { title:"Quran Stories", titleAr:"قصص القرآن", type:"islamic", emoji:"📗", channel:"islamic", url: ytSearch("قصص القرآن للأطفال") }
+];
+
+function getChannels() { return [...builtInChannels, ...custom.channels]; }
+function getShows() {
+  return [
+    ...builtInYouTube, ...builtInEnglish, ...builtInPrayer, ...builtInEducational,
+    ...builtInArabicClassics, ...builtInQatarTV, ...builtInGulf, ...builtInIslamic, ...custom.shows
+  ];
+}
+
+let activeChannel = null;
+
+const channelsRow = document.getElementById('channelsRow');
+const channelCount = document.getElementById('channelCount');
+const allChannelsBtn = document.getElementById('allChannelsBtn');
+const youtubeGrid = document.getElementById('youtubeGrid');
+const englishGrid = document.getElementById('englishGrid');
+const prayerGrid = document.getElementById('prayerGrid');
+const educationalGrid = document.getElementById('educationalGrid');
+const arabicGrid = document.getElementById('arabicGrid');
+const gulfGrid = document.getElementById('gulfGrid');
+const islamicGrid = document.getElementById('islamicGrid');
+const youtubeSection = document.getElementById('youtubeSection');
+const englishSection = document.getElementById('englishSection');
+const prayerSection = document.getElementById('prayerSection');
+const educationalSection = document.getElementById('educationalSection');
+const arabicSection = document.getElementById('arabicSection');
+const gulfSection = document.getElementById('gulfSection');
+const islamicSection = document.getElementById('islamicSection');
+const typeFilter = document.getElementById('typeFilter');
+const nameSearch = document.getElementById('nameSearch');
+
+function renderChannels() {
+  const channels = getChannels();
+  const allItems = getShows();
+  channelsRow.innerHTML = '';
+  channels.forEach(ch => {
+    const count = allItems.filter(c => c.channel === ch.id).length;
+    const btn = document.createElement('button');
+    btn.className = 'channel-card';
+    btn.dataset.channel = ch.id;
+    btn.innerHTML = `
+      <div class="channel-logo" style="background:${ch.color}22;color:${ch.color};border:1px solid ${ch.color}44;">
+        ${ch.emoji || ch.name[0]}
+      </div>
+      <div class="channel-info">
+        <div class="channel-name">${escapeHtml(ch.name)}</div>
+        <div class="channel-count">${count} shows</div>
+      </div>
+      ${ch.custom ? '<button class="channel-del" data-del="'+ch.id+'" title="Delete channel">✕</button>' : ''}
+    `;
+    btn.onclick = (e) => { if (!e.target.dataset.del) selectChannel(ch.id); };
+    channelsRow.appendChild(btn);
+  });
+  channelsRow.querySelectorAll('[data-del]').forEach(b => {
+    b.onclick = (e) => {
+      e.stopPropagation();
+      const id = b.dataset.del;
+      if (!confirm("Delete this channel and its shows? This cannot be undone.")) return;
+      custom.channels = custom.channels.filter(c => c.id !== id);
+      custom.shows = custom.shows.filter(s => s.channel !== id);
+      saveCustom(custom);
+      if (activeChannel === id) activeChannel = null;
+      renderChannels(); applyFilters(); toast("Channel deleted");
+    };
+  });
+  channelCount.textContent = channels.length;
+}
+
+function selectChannel(chId) {
+  activeChannel = chId;
+  document.querySelectorAll('.channel-card').forEach(c => {
+    c.classList.toggle('active', c.dataset.channel === chId);
+  });
+  allChannelsBtn.classList.toggle('active', !chId);
+  applyFilters();
+}
+allChannelsBtn.onclick = () => selectChannel(null);
+
+function escapeHtml(v) {
+  return String(v == null ? "" : v).replace(/[&<>'"]/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"
+  }[c]));
+}
+
+function createCard(c) {
+  const card = document.createElement('a');
+  card.className = 'card';
+  card.href = c.url; card.target = '_blank'; card.rel = 'noopener noreferrer';
+  const badgeClass = c.type === 'movie' ? 'type-movie' :
+                     c.type === 'series' ? 'type-series' :
+                     c.type === 'islamic' ? 'type-islamic' :
+                     c.type === 'educational' ? 'type-educational' :
+                     c.type === 'english' ? 'type-english' :
+                     c.type === 'prayer' ? 'type-prayer' : 'type-classic';
+  const meta = c.year ? `${c.year} • ⭐ ${c.rating}` : '⭐ Free';
+  card.innerHTML = `
+    <div class="card-image">
+      <div>${c.emoji || '🎬'}</div>
+      <div class="card-play">▶</div>
+    </div>
+    <div class="card-info">
+      <h3>${escapeHtml(c.title)}</h3>
+      ${c.titleAr ? `<div class="ar">${escapeHtml(c.titleAr)}</div>` : ''}
+      <div class="card-meta">
+        <span class="rating">${escapeHtml(meta)}</span>
+        <span class="type-badge ${badgeClass}">${c.type}</span>
+      </div>
+    </div>
+    ${c.custom ? '<button class="card-del" data-del="'+c.id+'" title="Delete show">✕</button>' : ''}
+  `;
+  const delBtn = card.querySelector('[data-del]');
+  if (delBtn) {
+    delBtn.onclick = (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const id = delBtn.dataset.del;
+      if (!confirm("Delete this show? This cannot be undone.")) return;
+      custom.shows = custom.shows.filter(s => s.id !== id);
+      saveCustom(custom); renderChannels(); applyFilters(); toast("Show deleted");
+    };
+  }
+  return card;
+}
+
+function matches(c) {
+  const type = typeFilter.value;
+  const query = nameSearch.value.toLowerCase().trim();
+  if (activeChannel && c.channel !== activeChannel) return false;
+  if (type !== 'all' && c.type !== type) return false;
+  if (query) {
+    const inEn = c.title && c.title.toLowerCase().includes(query);
+    const inAr = c.titleAr && c.titleAr.includes(query);
+    if (!inEn && !inAr) return false;
+  }
+  return true;
+}
+
+function applyFilters() {
+  const all = getShows();
+
+  const yt = all.filter(c => matches(c) && (builtInYouTube.includes(c) || (c.custom && (c.type === 'series' || c.type === 'movie'))));
+  youtubeGrid.innerHTML = '';
+  yt.forEach(c => youtubeGrid.appendChild(createCard(c)));
+  youtubeSection.style.display = yt.length ? 'block' : 'none';
+
+  const eng = all.filter(c => matches(c) && (builtInEnglish.includes(c) || (c.custom && c.type === 'english')));
+  englishGrid.innerHTML = '';
+  eng.forEach(c => englishGrid.appendChild(createCard(c)));
+  englishSection.style.display = eng.length ? 'block' : 'none';
+
+  const pr = all.filter(c => matches(c) && (builtInPrayer.includes(c) || (c.custom && c.type === 'prayer')));
+  prayerGrid.innerHTML = '';
+  pr.forEach(c => prayerGrid.appendChild(createCard(c)));
+  prayerSection.style.display = pr.length ? 'block' : 'none';
+
+  const edu = all.filter(c => matches(c) && (builtInEducational.includes(c) || (c.custom && c.type === 'educational')));
+  educationalGrid.innerHTML = '';
+  edu.forEach(c => educationalGrid.appendChild(createCard(c)));
+  educationalSection.style.display = edu.length ? 'block' : 'none';
+
+  const ar = all.filter(c => matches(c) && (builtInArabicClassics.includes(c) || builtInQatarTV.includes(c) || (c.custom && c.type === 'classic')));
+  arabicGrid.innerHTML = '';
+  ar.forEach(c => arabicGrid.appendChild(createCard(c)));
+  arabicSection.style.display = ar.length ? 'block' : 'none';
+
+  const gulf = all.filter(c => matches(c) && (builtInGulf.includes(c) || (c.custom && c.type === 'gulf')));
+  gulfGrid.innerHTML = '';
+  gulf.forEach(c => gulfGrid.appendChild(createCard(c)));
+  gulfSection.style.display = gulf.length ? 'block' : 'none';
+
+  const isl = all.filter(c => matches(c) && (builtInIslamic.includes(c) || (c.custom && c.type === 'islamic')));
+  islamicGrid.innerHTML = '';
+  isl.forEach(c => islamicGrid.appendChild(createCard(c)));
+  islamicSection.style.display = isl.length ? 'block' : 'none';
+}
+
+typeFilter.addEventListener('change', applyFilters);
+nameSearch.addEventListener('input', applyFilters);
+
+const addChannelDialog = document.getElementById('addChannelDialog');
+const addChannelForm = document.getElementById('addChannelForm');
+document.getElementById('addChannelBtn').onclick = () => {
+  addChannelForm.reset();
+  document.getElementById('acEmoji').value = '📺';
+  addChannelDialog.showModal();
+};
+document.getElementById('acCancel').onclick = () => addChannelDialog.close();
+addChannelForm.onsubmit = (e) => {
+  e.preventDefault();
+  const name = document.getElementById('acName').value.trim();
+  const nameAr = document.getElementById('acNameAr').value.trim() || name;
+  const emoji = document.getElementById('acEmoji').value.trim() || '📺';
+  const color = document.getElementById('acColor').value;
+  if (!name) return;
+  const id = "custom-" + Date.now();
+  custom.channels.push({ id, name, nameAr, emoji, color, custom: true });
+  saveCustom(custom); addChannelDialog.close(); renderChannels(); applyFilters(); toast("Channel added");
+};
+
+const addShowDialog = document.getElementById('addShowDialog');
+const addShowForm = document.getElementById('addShowForm');
+function refreshChannelSelect() {
+  const sel = document.getElementById('asChannel');
+  sel.innerHTML = '';
+  getChannels().forEach(ch => {
+    const o = document.createElement('option');
+    o.value = ch.id;
+    o.textContent = ch.name + (ch.nameAr && ch.nameAr !== ch.name ? " — " + ch.nameAr : "");
+    sel.appendChild(o);
+  });
+}
+document.getElementById('addShowBtn').onclick = () => {
+  addShowForm.reset();
+  document.getElementById('asEmoji').value = '🎬';
+  refreshChannelSelect();
+  if (activeChannel) document.getElementById('asChannel').value = activeChannel;
+  addShowDialog.showModal();
+};
+document.getElementById('asCancel').onclick = () => addShowDialog.close();
+addShowForm.onsubmit = (e) => {
+  e.preventDefault();
+  const title = document.getElementById('asTitle').value.trim();
+  const titleAr = document.getElementById('asTitleAr').value.trim() || title;
+  const emoji = document.getElementById('asEmoji').value.trim() || '🎬';
+  const type = document.getElementById('asType').value;
+  const channel = document.getElementById('asChannel').value;
+  let url = document.getElementById('asUrl').value.trim();
+  if (!title || !url) return;
+  if (!/^https?:\/\//i.test(url)) url = ytSearch(url);
+  const id = "custom-" + Date.now();
+  custom.shows.push({ id, title, titleAr, emoji, type, channel, url, custom: true });
+  saveCustom(custom); addShowDialog.close(); renderChannels(); applyFilters(); toast("Show added");
+};
+
+document.getElementById('resetBtn').onclick = () => {
+  if (!confirm("Remove ALL your custom channels and shows? This cannot be undone.")) return;
+  custom = { channels: [], shows: [] };
+  saveCustom(custom); activeChannel = null; renderChannels(); applyFilters(); toast("Reset done");
+};
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+renderChannels();
+applyFilters();
+</script>
+
+</body>
+</html>
